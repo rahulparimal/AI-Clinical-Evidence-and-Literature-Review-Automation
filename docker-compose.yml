@@ -1,0 +1,20 @@
+services:
+  frontend:
+    build: ./frontend
+    ports: ["5173:80"]
+    depends_on: [api]
+  api:
+    build: ./api
+    ports: ["3000:3000"]
+    environment:
+      AI_SERVICE_URL: http://ai-service:8000
+      AUDIT_HMAC_KEY: ${AUDIT_HMAC_KEY:-local-development-key-32-characters}
+    depends_on: [ai-service]
+  ai-service:
+    build: ./ai-service
+    ports: ["8000:8000"]
+    environment:
+      MOCK_MODE: ${MOCK_MODE:-true}
+      NCBI_TOOL: ${NCBI_TOOL:-ivd-evidence-assistant}
+      NCBI_EMAIL: ${NCBI_EMAIL:-regulatory@example.com}
+      NCBI_API_KEY: ${NCBI_API_KEY:-}
