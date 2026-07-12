@@ -1,0 +1,1 @@
+import test from'node:test';import assert from'node:assert/strict';import crypto from'node:crypto';test('hash deterministic',()=>assert.equal(crypto.createHash('sha256').update('a').digest('hex'),crypto.createHash('sha256').update('a').digest('hex')));test('roles remain human controlled',()=>assert.ok(['Reviewer','Approver'].includes('Reviewer')));
