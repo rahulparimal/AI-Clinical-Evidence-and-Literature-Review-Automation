@@ -1,0 +1,6 @@
+import express from'express';import cors from'cors';import crypto from'crypto';import{z}from'zod';
+const app=express();app.use(cors());app.use(express.json());const key=process.env.AUDIT_HMAC_KEY||'local-development-key-32-characters';
+const Search=z.object({question:z.string().min(5),protocolId:z.string().min(2),sources:z.array(z.enum(['pubmed','maude','internal'])).min(1)});
+app.get('/health',(_,r)=>r.json({status:'ok',service:'workflow-api'}));
+app.post('/api/reviews/search',async(req,res)=>{const parsed=Search.safeParse(req.body);if(!parsed.success)return res.status(400).json({error:parsed.error.flatten()});const response=await fetch(`${process.env.AI_SERVICE_URL||'http://localhost:8000'}/search`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(parsed.data)});const data=await response.json();const event={action:'SEARCH_EXECUTED',protocolId:parsed.data.protocolId,at:new Date().toISOString(),resultHash:crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex')};const signature=crypto.createHmac('sha256',key).update(JSON.stringify(event)).digest('hex');res.json({data,audit:{...event,signature}})});
+app.listen(Number(process.env.API_PORT||3000));
